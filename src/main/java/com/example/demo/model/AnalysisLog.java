@@ -2,8 +2,6 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 public class AnalysisLog {
 
@@ -13,15 +11,14 @@ public class AnalysisLog {
 
     private String message;
 
-    private LocalDateTime loggedAt;
-
     @ManyToOne
     private HotspotZone zone;
 
-    @PrePersist
-    public void prePersist() {
-        this.loggedAt = LocalDateTime.now();
+    public void setZone(HotspotZone zone) {
+        this.zone = zone;
     }
 
-    // Getters & Setters
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }
