@@ -2,8 +2,6 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
-
 @Entity
 public class PatternDetectionResult {
 
@@ -11,21 +9,21 @@ public class PatternDetectionResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private int crimeCount;
+    private String pattern;
+
     @ManyToOne
     private HotspotZone zone;
 
-    private LocalDate analysisDate;
-
-    private Integer crimeCount;
-
-    private String detectedPattern;
-
-    @PrePersist
-    public void validateCount() {
-        if (crimeCount < 0) {
-            throw new RuntimeException("Crime count cannot be negative");
-        }
+    public void setZone(HotspotZone zone) {
+        this.zone = zone;
     }
 
-    // Getters & Setters
+    public void setCrimeCount(int crimeCount) {
+        this.crimeCount = crimeCount;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
 }
