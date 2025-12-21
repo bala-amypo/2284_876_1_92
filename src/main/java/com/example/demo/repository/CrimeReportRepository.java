@@ -1,13 +1,13 @@
 package com.example.demo.repository;
 
-import com.example.demo.model.PatternDetectionResult;
+import com.example.demo.model.CrimeReport;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PatternDetectionResultRepository extends JpaRepository<PatternDetectionResult, Long> {
-    @Query("SELECT p FROM PatternDetectionResult p WHERE p.zone.id = ?1 ORDER BY p.analysisDate DESC")
-    List<PatternDetectionResult> findByZone_Id(Long zoneId);
+public interface CrimeReportRepository extends JpaRepository<CrimeReport, Long> {
+    @Query("SELECT c FROM CrimeReport c WHERE c.latitude BETWEEN ?1 AND ?2 AND c.longitude BETWEEN ?3 AND ?4")
+    List<CrimeReport> findByLatLongRange(double minLat, double maxLat, double minLong, double maxLong);
 }
