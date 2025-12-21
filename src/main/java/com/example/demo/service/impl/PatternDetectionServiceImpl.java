@@ -3,77 +3,68 @@ package com.example.demo.service.impl;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.PatternDetectionService;
-import com.example.demo.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
-
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class PatternDetectionServiceImpl implements PatternDetectionService {
-
-    private final HotspotZoneRepository zoneRepository;
-    private final CrimeReportRepository crimeRepository;
-    private final PatternDetectionResultRepository resultRepository;
-    private final AnalysisLogRepository logRepository;
-
-    public PatternDetectionServiceImpl(
-            HotspotZoneRepository zoneRepository,
-            CrimeReportRepository crimeRepository,
-            PatternDetectionResultRepository resultRepository,
-            AnalysisLogRepository logRepository) {
-
-        this.zoneRepository = zoneRepository;
-        this.crimeRepository = crimeRepository;
-        this.resultRepository = resultRepository;
-        this.logRepository = logRepository;
+    
+    private final HotspotZoneRepository zoneRepo;
+    private final CrimeReportRepository reportRepo;
+    private final PatternDetectionResultRepository resultRepo;
+    private final AnalysisLogRepository logRepo;
+    
+    public PatternDetectionServiceImpl(HotspotZoneRepository zoneRepo, 
+                                     CrimeReportRepository reportRepo,
+                                     PatternDetectionResultRepository resultRepo,
+                                     AnalysisLogRepository logRepo) {
+        this.zoneRepo = zoneRepo;
+        this.reportRepo = reportRepo;
+        this.resultRepo = resultRepo;
+        this.logRepo = logRepo;
     }
-
+    
     @Override
-    public PatternDetectionResult detectPattern(Long zoneId) {
-
-        HotspotZone zone = zoneRepository.findById(zoneId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Zone not found with id: " + zoneId));
-
-        double lat = zone.getCenterLatitude();
-        double lon = zone.getCenterLongitude();
-
-        List<CrimeReport> nearbyCrimes =
-                crimeRepository.findCrimesNear(lat, lon, 0.1);
-
-        int count = nearbyCrimes.size();
-        String pattern;
-
-        if (count > 5) {
-            pattern = "High";
-            zone.setSeverity("HIGH");
-        } else if (count > 0) {
-            pattern = "Medium";
-            zone.setSeverity("MEDIUM");
+    public PatternDetectionResult detectPattern(Long zoneId) throws Exception {
+        HotspotZone zone = zoneRepo.findById(zoneId)
+                .orElseThrow(() -> new RuntimeException("Zone not found"));
+        
+        double minLat = zone.getCenterLat() - 0.1;
+        double maxLat = zone.getCenterLat() + 0.1;
+        double minLong = zone.getCenterLong() - 0.1;
+        double maxLong = zone.getCenterLong() + 0.1;
+        
+        List<CrimeReport> crimes = reportRepo.findByLatLongRange(minLat, maxLat, minLong, maxLong);
+        int crimeCount = crimes.size();
+        
+        String detectedPattern;
+        String newSeverity;
+        if (crimeCount > 5) {
+            detectedPattern = "High Risk Pattern Detected";
+            newSeverity = "HIGH";
+        } else if (crimeCount > 0) {
+            detectedPattern = "Medium Risk Pattern Detected";
+            newSeverity = "MEDIUM";
         } else {
-            pattern = "No";
-            zone.setSeverity("LOW");
+            detectedPattern = "No Pattern Detected";
+            newSeverity = "LOW";
         }
-
-        zoneRepository.save(zone);
-
-        PatternDetectionResult result = new PatternDetectionResult();
-        result.setZone(zone);
-        result.setCrimeCount(count);
-        result.setPattern(pattern);
-
-        PatternDetectionResult savedResult = resultRepository.save(result);
-
-        AnalysisLog log = new AnalysisLog();
-        log.setZone(zone);
-        log.setMessage("Pattern detected: " + pattern + " (" + count + " crimes)");
-        logRepository.save(log);
-
-        return savedResult;
+        
+        PatternDetectionResult result = new PatternDetectionResult(zone, LocalDate.now(), crimeCount, detectedPattern);
+        result = resultRepo.save(result);
+        
+        AnalysisLog log = new AnalysisLog("Pattern detection completed for zone: " + zone.getZoneName(), null, zone);
+        logRepo.save(log);
+        
+        zone.setSeverityLevel(newSeverity);
+        zoneRepo.save(zone);
+        
+        return result;
     }
-
+    
     @Override
     public List<PatternDetectionResult> getResultsByZone(Long zoneId) {
-        return resultRepository.findByZoneId(zoneId);
+        return resultRepo.findByZone_Id(zoneId);
     }
 }

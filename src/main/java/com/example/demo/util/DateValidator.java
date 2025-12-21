@@ -1,28 +1,17 @@
 package com.example.demo.util;
 
+import org.springframework.stereotype.Component;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public final class DateValidator {
-
-    private DateValidator() {
-        // prevent instantiation
+@Component
+public class DateValidator {
+    
+    public boolean isNotFuture(LocalDateTime dt) {
+        return dt != null && !dt.isAfter(LocalDateTime.now());
     }
-
-    /**
-     * Validates that the given date-time is not null
-     * and not in the future.
-     *
-     * @param dateTime LocalDateTime to validate
-     * @throws IllegalArgumentException if invalid
-     */
-    public static void validateNotFuture(LocalDateTime dateTime) {
-
-        if (dateTime == null) {
-            throw new IllegalArgumentException("Date time cannot be null");
-        }
-
-        if (dateTime.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Date time cannot be in the future");
-        }
+    
+    public boolean isValidDateRange(LocalDate start, LocalDate end) {
+        return start != null && end != null && !start.isAfter(end);
     }
 }
