@@ -1,18 +1,14 @@
-import com.example.demo.dto.PatternDetectionResultDTO;
-
-@Override
-public PatternDetectionResultDTO detectPattern(Long zoneId) throws Exception {
-
-    HotspotZone zone = zoneRepo.findById(zoneId)
-            .orElseThrow(() -> new RuntimeException("Zone not found"));
-
-    double minLat = zone.getCenterLat() - 0.1;
-    double maxLat = zone.getCenterLat() + 0.1;
-    double minLong = zone.getCenterLong() - 0.1;package com.example.demo.service.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.dto.PatternDetectionResultDTO;
-import com.example.demo.model.*;
-import com.example.demo.repository.*;
+import com.example.demo.model.AnalysisLog;
+import com.example.demo.model.CrimeReport;
+import com.example.demo.model.HotspotZone;
+import com.example.demo.model.PatternDetectionResult;
+import com.example.demo.repository.AnalysisLogRepository;
+import com.example.demo.repository.CrimeReportRepository;
+import com.example.demo.repository.HotspotZoneRepository;
+import com.example.demo.repository.PatternDetectionResultRepository;
 import com.example.demo.service.PatternDetectionService;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +37,7 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
 
     // ===================== DETECT PATTERN =====================
     @Override
-    public PatternDetectionResultDTO detectPattern(Long zoneId) throws Exception {
+    public PatternDetectionResultDTO detectPattern(Long zoneId) {
 
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
@@ -91,7 +87,7 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
         );
         logRepo.save(log);
 
-        // RETURN DTO (IMPORTANT)
+        // return DTO
         return new PatternDetectionResultDTO(
                 result.getId(),
                 zone.getId(),
@@ -116,42 +112,4 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
                 ))
                 .toList();
     }
-}
-
-    double maxLong = zone.getCenterLong() + 0.1;
-
-    List<CrimeReport> crimes =
-            reportRepo.findByLatLongRange(minLat, maxLat, minLong, maxLong);
-
-    int crimeCount = crimes.size();
-
-    String detectedPattern;
-    String newSeverity;
-
-    if (crimeCount > 5) {
-        detectedPattern = "High Risk Pattern Detected";
-        newSeverity = "HIGH";
-    } else if (crimeCount > 0) {
-        detectedPattern = "Medium Risk Pattern Detected";
-        newSeverity = "MEDIUM";
-    } else {
-        detectedPattern = "No Pattern Detected";
-        newSeverity = "LOW";
-    }
-
-    PatternDetectionResult result =
-            new PatternDetectionResult(zone, LocalDate.now(), crimeCount, detectedPattern);
-
-    result = resultRepo.save(result);
-
-    zone.setSeverityLevel(newSeverity);
-    zoneRepo.save(zone);
-
-    return new PatternDetectionResultDTO(
-            result.getId(),
-            zone.getId(),
-            result.getAnalysisDate(),
-            result.getCrimeCount(),
-            result.getDetectedPattern()
-    );
 }
