@@ -20,11 +20,12 @@ public class PatternDetectionController {
     }
 
     @GetMapping("/zone/{zoneId}")
-    public ResponseEntity<List<PatternDetectionResultDTO>> getResultsByZone(
-            @PathVariable Long zoneId) {
+public ResponseEntity<List<PatternDetectionResultDTO>> getResultsByZone(
+        @PathVariable Long zoneId) {
 
-        return ResponseEntity.ok(
-                patternDetectionService.getResultsByZone(zoneId)
-        );
-    }
+    return ResponseEntity.ok(
+            patternDetectionService.getResultsByZone(zoneId)
+    );
+}
+
 }
