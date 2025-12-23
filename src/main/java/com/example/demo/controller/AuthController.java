@@ -42,12 +42,12 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         try {
             User user = userService.findByEmail(request.getEmail());
-            if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
-                return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), user.getRole()));
-            } else {
-                return ResponseEntity.status(401).build();
-            }
+            // if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            //     String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
+            //     return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), user.getRole()));
+            // } else {
+            //     return ResponseEntity.status(401).build();
+            // }
         } catch (Exception e) {
             return ResponseEntity.status(401).build();
         }
