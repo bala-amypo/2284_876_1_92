@@ -1,9 +1,7 @@
-package com.example.demo.service;
-
-import com.example.demo.model.PatternDetectionResult;
+import com.example.demo.dto.PatternDetectionResultDTO;
 import java.util.List;
 
 public interface PatternDetectionService {
-    PatternDetectionResult detectPattern(Long zoneId) throws Exception;
-    List<PatternDetectionResult> getResultsByZone(Long zoneId);
+    PatternDetectionResultDTO detectPattern(Long zoneId) throws Exception;
+    List<PatternDetectionResultDTO> getResultsByZone(Long zoneId);
 }
