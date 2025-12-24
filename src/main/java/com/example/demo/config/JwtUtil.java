@@ -30,7 +30,7 @@ public class JwtUtil {
         claims.put("email", email);
         claims.put("role", role);
         
-        return Jwts.builder()c
+        return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
