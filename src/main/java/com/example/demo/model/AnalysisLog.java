@@ -11,33 +11,42 @@ public class AnalysisLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String message;
-
-    private LocalDateTime createdAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "zone_id")
     private HotspotZone zone;
 
+    private String message;
+
+    private LocalDateTime loggedAt;
+
     public AnalysisLog() {}
 
-    public AnalysisLog(String message, HotspotZone zone) {
-        this.message = message;
+    public AnalysisLog(HotspotZone zone, String message) {
         this.zone = zone;
+        this.message = message;
+        this.loggedAt = LocalDateTime.now();
     }
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        if (loggedAt == null) {
+            loggedAt = LocalDateTime.now();
+        }
     }
 
-    public Long getId() { return id; }
-    public String getMessage() { return message; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public HotspotZone getZone() { return zone; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setId(Long id) { this.id = id; }
-    public void setMessage(String message) { this.message = message; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public void setZone(HotspotZone zone) { this.zone = zone; }
+    public HotspotZone getZone() {
+        return zone;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public LocalDateTime getLoggedAt() {
+        return loggedAt;
+    }
 }
