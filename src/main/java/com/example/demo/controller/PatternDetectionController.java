@@ -1,29 +1,28 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.PatternDetectionResult;
+import com.example.demo.dto.PatternDetectionResultDTO;
 import com.example.demo.service.PatternDetectionService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/patterns")
+@RequestMapping("/api/patterns")
 public class PatternDetectionController {
 
-    private final PatternDetectionService patternDetectionService;
+    private final PatternDetectionService patternService;
 
-    public PatternDetectionController(PatternDetectionService patternDetectionService) {
-        this.patternDetectionService = patternDetectionService;
+    public PatternDetectionController(PatternDetectionService patternService) {
+        this.patternService = patternService;
     }
 
     @PostMapping("/detect/{zoneId}")
-    public ResponseEntity<PatternDetectionResult> detect(@PathVariable Long zoneId) {
-        return ResponseEntity.ok(patternDetectionService.detectPattern(zoneId));
+    public PatternDetectionResultDTO detect(@PathVariable Long zoneId) {
+        return patternService.detectPattern(zoneId);
     }
 
     @GetMapping("/zone/{zoneId}")
-    public ResponseEntity<List<PatternDetectionResult>> getByZone(@PathVariable Long zoneId) {
-        return ResponseEntity.ok(patternDetectionService.getResultsByZone(zoneId));
+    public List<PatternDetectionResultDTO> getByZone(@PathVariable Long zoneId) {
+        return patternService.getResultsByZone(zoneId);
     }
 }
