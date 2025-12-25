@@ -37,7 +37,7 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
 
     // ===================== DETECT PATTERN =====================
     @Override
-    public PatternDetectionResultDTO detectPattern(Long zoneId) {
+   public PatternDetectionResultDTO detectPattern(Long zoneId) {
 
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
