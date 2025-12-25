@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface AnalysisLogService {
 
-    AnalysisLog save(AnalysisLog log);
+    AnalysisLog addLog(Long zoneId, String message);
 
-    List<AnalysisLog> getByZone(Long zoneId);
+    List<AnalysisLog> getLogsByZone(Long zoneId);
 }
