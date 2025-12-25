@@ -4,35 +4,34 @@ import com.example.demo.model.HotspotZone;
 import com.example.demo.repository.HotspotZoneRepository;
 import com.example.demo.service.HotspotZoneService;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
 public class HotspotZoneServiceImpl implements HotspotZoneService {
-    
-    private final HotspotZoneRepository zoneRepository;
-    
-    public HotspotZoneServiceImpl(HotspotZoneRepository zoneRepository) {
-        this.zoneRepository = zoneRepository;
+
+    private final HotspotZoneRepository hotspotZoneRepository;
+
+    public HotspotZoneServiceImpl(HotspotZoneRepository hotspotZoneRepository) {
+        this.hotspotZoneRepository = hotspotZoneRepository;
     }
-    
+
     @Override
-    public HotspotZone addZone(HotspotZone zone) throws Exception {
-        if (zoneRepository.existsByZoneName(zone.getZoneName())) {
-            throw new IllegalArgumentException("Zone name already exists");
+    public HotspotZone addZone(HotspotZone zone) {
+
+        if (hotspotZoneRepository.existsByZoneName(zone.getZoneName())) {
+            throw new IllegalArgumentException("Zone already exists");
         }
-        
-        if (zone.getCenterLat() < -90 || zone.getCenterLat() > 90) {
-            throw new IllegalArgumentException("Invalid latitude range");
+
+        if (zone.getSeverityLevel() == null) {
+            zone.setSeverityLevel("LOW");
         }
-        if (zone.getCenterLong() < -180 || zone.getCenterLong() > 180) {
-            throw new IllegalArgumentException("Invalid longitude range");
-        }
-        
-        return zoneRepository.save(zone);
+
+        return hotspotZoneRepository.save(zone);
     }
-    
+
     @Override
     public List<HotspotZone> getAllZones() {
-        return zoneRepository.findAll();
+        return hotspotZoneRepository.findAll();
     }
 }
