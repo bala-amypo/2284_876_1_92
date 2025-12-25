@@ -40,7 +40,8 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
    public PatternDetectionResultDTO detectPattern(Long zoneId) {
 
         HotspotZone zone = zoneRepo.findById(zoneId)
-                .orElseThrow(() -> new RuntimeException("Zone not found"));
+
+      orElseThrow(() -> new RuntimeException("Zone not found"));
 
         double minLat = zone.getCenterLat() - 0.1;
         double maxLat = zone.getCenterLat() + 0.1;
