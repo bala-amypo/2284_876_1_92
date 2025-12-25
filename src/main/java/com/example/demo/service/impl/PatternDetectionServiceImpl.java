@@ -1,29 +1,39 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.dto.PatternDetectionResultDTO;
-import com.example.demo.model.*;
-import com.example.demo.repository.*;
+import com.example.demo.model.AnalysisLog;
+import com.example.demo.model.CrimeReport;
+import com.example.demo.model.HotspotZone;
+import com.example.demo.model.PatternDetectionResult;
+import com.example.demo.repository.AnalysisLogRepository;
+import com.example.demo.repository.CrimeReportRepository;
+import com.example.demo.repository.HotspotZoneRepository;
+import com.example.demo.repository.PatternDetectionResultRepository;
 import com.example.demo.service.PatternDetectionService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PatternDetectionServiceImpl implements PatternDetectionService {
 
+    private final CrimeReportRepository crimeRepo;
     private final HotspotZoneRepository zoneRepo;
-    private final CrimeReportRepository reportRepo;
     private final PatternDetectionResultRepository resultRepo;
+    private final AnalysisLogRepository logRepo;
 
     public PatternDetectionServiceImpl(
+            CrimeReportRepository crimeRepo,
             HotspotZoneRepository zoneRepo,
-            CrimeReportRepository reportRepo,
-            PatternDetectionResultRepository resultRepo) {
-
+            PatternDetectionResultRepository resultRepo,
+            AnalysisLogRepository logRepo
+    ) {
+        this.crimeRepo = crimeRepo;
         this.zoneRepo = zoneRepo;
-        this.reportRepo = reportRepo;
         this.resultRepo = resultRepo;
+        this.logRepo = logRepo;
     }
 
     @Override
@@ -32,45 +42,49 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
 
-        double minLat = zone.getCenterLat() - 0.1;
-        double maxLat = zone.getCenterLat() + 0.1;
-        double minLong = zone.getCenterLong() - 0.1;
-        double maxLong = zone.getCenterLong() + 0.1;
+        double lat = zone.getCenterLat();
+        double lon = zone.getCenterLong();
 
-        List<CrimeReport> crimes =
-                reportRepo.findByLatLongRange(minLat, maxLat, minLong, maxLong);
+        // Simple bounding box logic
+        List<CrimeReport> crimes = crimeRepo.findByLatLongRange(
+                lat - 0.01, lat + 0.01,
+                lon - 0.01, lon + 0.01
+        );
 
         int crimeCount = crimes.size();
 
         String pattern;
-        String severity;
-
-        if (crimeCount > 5) {
-            pattern = "High Risk Pattern Detected";
-            severity = "HIGH";
-        } else if (crimeCount > 0) {
-            pattern = "Medium Risk Pattern Detected";
-            severity = "MEDIUM";
+        if (crimeCount > 20) {
+            pattern = "HIGH_RISK_PATTERN";
+            zone.setSeverityLevel("HIGH");
+        } else if (crimeCount > 10) {
+            pattern = "MEDIUM_RISK_PATTERN";
+            zone.setSeverityLevel("MEDIUM");
         } else {
-            pattern = "No Pattern Detected";
-            severity = "LOW";
+            pattern = "LOW_RISK_PATTERN";
+            zone.setSeverityLevel("LOW");
         }
 
-        PatternDetectionResult result =
-                new PatternDetectionResult(zone, LocalDate.now(), crimeCount, pattern);
-
-        result = resultRepo.save(result);
-
-        zone.setSeverityLevel(severity);
         zoneRepo.save(zone);
 
-        return new PatternDetectionResultDTO(
-                result.getId(),
-                zone.getId(),
-                result.getAnalysisDate(),
-                result.getCrimeCount(),
-                result.getDetectedPattern()
+        PatternDetectionResult result = new PatternDetectionResult(
+                zone,
+                LocalDate.now(),
+                crimeCount,
+                pattern
         );
+
+        resultRepo.save(result);
+
+        // ✅ Correct logging
+        logRepo.save(new AnalysisLog(
+                "Pattern detected for zone: " + zone.getZoneName() +
+                        " | Pattern: " + pattern +
+                        " | Crime Count: " + crimeCount,
+                zone
+        ));
+
+        return mapToDTO(result);
     }
 
     @Override
@@ -78,13 +92,17 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
 
         return resultRepo.findByZone_Id(zoneId)
                 .stream()
-                .map(r -> new PatternDetectionResultDTO(
-                        r.getId(),
-                        r.getZone().getId(),
-                        r.getAnalysisDate(),
-                        r.getCrimeCount(),
-                        r.getDetectedPattern()
-                ))
-                .toList();
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private PatternDetectionResultDTO mapToDTO(PatternDetectionResult result) {
+        return new PatternDetectionResultDTO(
+                result.getId(),
+                result.getZone().getZoneName(),
+                result.getAnalysisDate(),
+                result.getCrimeCount(),
+                result.getDetectedPattern()
+        );
     }
 }

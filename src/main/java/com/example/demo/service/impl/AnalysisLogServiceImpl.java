@@ -1,35 +1,28 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.model.AnalysisLog;
-import com.example.demo.model.HotspotZone;
 import com.example.demo.repository.AnalysisLogRepository;
-import com.example.demo.repository.HotspotZoneRepository;
 import com.example.demo.service.AnalysisLogService;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
 public class AnalysisLogServiceImpl implements AnalysisLogService {
-    
+
     private final AnalysisLogRepository logRepo;
-    private final HotspotZoneRepository zoneRepo;
-    
-    public AnalysisLogServiceImpl(AnalysisLogRepository logRepo, HotspotZoneRepository zoneRepo) {
+
+    public AnalysisLogServiceImpl(AnalysisLogRepository logRepo) {
         this.logRepo = logRepo;
-        this.zoneRepo = zoneRepo;
     }
-    
+
     @Override
-    public AnalysisLog addLog(Long zoneId, String message) throws Exception {
-        HotspotZone zone = zoneRepo.findById(zoneId)
-                .orElseThrow(() -> new RuntimeException("Zone not found"));
-        
-        AnalysisLog log = new AnalysisLog(message, null, zone);
+    public AnalysisLog save(AnalysisLog log) {
         return logRepo.save(log);
     }
-    
+
     @Override
-    public List<AnalysisLog> getLogsByZone(Long zoneId) {
+    public List<AnalysisLog> getByZone(Long zoneId) {
         return logRepo.findByZone_Id(zoneId);
     }
 }
