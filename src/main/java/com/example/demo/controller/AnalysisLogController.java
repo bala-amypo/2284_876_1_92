@@ -1,35 +1,27 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.AnalysisLog;
-import com.example.demo.service.AnalysisLogService;
-import org.springframework.http.ResponseEntity;
+import com.example.demo.model.PatternDetectionResult;
+import com.example.demo.repository.PatternDetectionResultRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/logs")
+@RequestMapping("/api/analysis-logs")
 public class AnalysisLogController {
 
-    private final AnalysisLogService analysisLogService;
+    private final PatternDetectionResultRepository resultRepository;
 
-    public AnalysisLogController(AnalysisLogService analysisLogService) {
-        this.analysisLogService = analysisLogService;
-    }
-
-    @PostMapping("/{zoneId}")
-    public ResponseEntity<AnalysisLog> addLog(
-            @PathVariable Long zoneId,
-            @RequestBody Map<String, String> body) {
-
-        return ResponseEntity.ok(
-                analysisLogService.addLog(zoneId, body.get("message"))
-        );
+    public AnalysisLogController(PatternDetectionResultRepository resultRepository) {
+        this.resultRepository = resultRepository;
     }
 
     @GetMapping("/zone/{zoneId}")
-    public ResponseEntity<List<AnalysisLog>> getLogs(@PathVariable Long zoneId) {
-        return ResponseEntity.ok(analysisLogService.getLogsByZone(zoneId));
+    public List<PatternDetectionResult> getLogsByZone(@PathVariable Long zoneId) {
+        try {
+            return resultRepository.findByZone_Id(zoneId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch analysis logs");
+        }
     }
 }
