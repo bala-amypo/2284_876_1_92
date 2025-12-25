@@ -17,9 +17,9 @@ public class CrimeReportServiceImpl implements CrimeReportService {
     }
     
     @Override
-    public CrimeReport addReport(CrimeReport report) throws Exception {
+public CrimeReport addReport(CrimeReport report)     
         if (report.getLatitude() < -90 || report.getLatitude() > 90) {
-            throw new IllegalArgumentException("Invalid latitude range");
+                       throw new RuntimeException("Invalid latitude");
         }
         if (report.getLongitude() < -180 || report.getLongitude() > 180) {
             throw new IllegalArgumentException("Invalid longitude range");
