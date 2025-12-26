@@ -17,21 +17,19 @@ public class AnalysisLogServiceImpl implements AnalysisLogService {
 
     public AnalysisLogServiceImpl(
             AnalysisLogRepository logRepo,
-            HotspotZoneRepository zoneRepo
-    ) {
+            HotspotZoneRepository zoneRepo) {
         this.logRepo = logRepo;
         this.zoneRepo = zoneRepo;
     }
 
     @Override
     public AnalysisLog addLog(Long zoneId, String message) {
-
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
 
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
-        log.setMessage(message); // timestamp auto-set in entity
+        log.setMessage(message); // loggedAt handled by entity
 
         return logRepo.save(log);
     }

@@ -3,12 +3,14 @@ package com.example.demo.service.impl;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
 
-import java.util.Base64;
-
+@Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repo;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public UserServiceImpl(UserRepository repo) {
         this.repo = repo;
@@ -16,20 +18,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User register(User user) {
-
         if (repo.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("User already exists");
+            throw new RuntimeException("Email already exists");
         }
-
-        // simple hash (test-friendly)
-        user.setPassword(
-                Base64.getEncoder().encodeToString(user.getPassword().getBytes())
-        );
-
-        if (user.getRole() == null) {
-            user.setRole("ANALYST");
-        }
-
+        user.setPassword(encoder.encode(user.getPassword()));
         return repo.save(user);
     }
 
