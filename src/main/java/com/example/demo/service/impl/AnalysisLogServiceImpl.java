@@ -15,7 +15,9 @@ public class AnalysisLogServiceImpl implements AnalysisLogService {
     private final AnalysisLogRepository logRepo;
     private final HotspotZoneRepository zoneRepo;
 
-    public AnalysisLogServiceImpl(AnalysisLogRepository logRepo, HotspotZoneRepository zoneRepo) {
+    public AnalysisLogServiceImpl(
+            AnalysisLogRepository logRepo,
+            HotspotZoneRepository zoneRepo) {
         this.logRepo = logRepo;
         this.zoneRepo = zoneRepo;
     }
@@ -25,7 +27,10 @@ public class AnalysisLogServiceImpl implements AnalysisLogService {
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
 
-        AnalysisLog log = new AnalysisLog(message, zone);
+        AnalysisLog log = new AnalysisLog();
+        log.setZone(zone);
+        log.setMessage(message); // loggedAt handled by entity
+
         return logRepo.save(log);
     }
 
