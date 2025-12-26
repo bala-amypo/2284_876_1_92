@@ -1,11 +1,13 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.dto.PatternDetectionResultDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.PatternDetectionService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PatternDetectionServiceImpl implements PatternDetectionService {
 
@@ -26,8 +28,11 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
         this.logRepo = logRepo;
     }
 
+    // ===============================
+    // detectPattern → RETURNS DTO
+    // ===============================
     @Override
-    public PatternDetectionResult detectPattern(Long zoneId) {
+    public PatternDetectionResultDTO detectPattern(Long zoneId) {
 
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
@@ -48,29 +53,55 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
         else if (count < 10) pattern = "Medium Crime";
         else pattern = "High Crime";
 
-        PatternDetectionResult result = new PatternDetectionResult();
-        result.setZone(zone);
-        result.setCrimeCount(count);
-        result.setDetectedPattern(pattern);
-        result.setAnalysisDate(LocalDate.now());
+        // ---- Save ENTITY ----
+        PatternDetectionResult entity = new PatternDetectionResult();
+        entity.setZone(zone);
+        entity.setCrimeCount(count);
+        entity.setDetectedPattern(pattern);
+        entity.setAnalysisDate(LocalDate.now());
 
-        resultRepo.save(result);
+        resultRepo.save(entity);
 
+        // ---- Log ----
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
         log.setMessage("Pattern detected: " + pattern);
         logRepo.save(log);
 
-        zone.setSeverityLevel(pattern.contains("High") ? "HIGH" :
-                              pattern.contains("Medium") ? "MEDIUM" : "LOW");
-
+        // ---- Update severity ----
+        zone.setSeverityLevel(
+                pattern.contains("High") ? "HIGH" :
+                pattern.contains("Medium") ? "MEDIUM" : "LOW"
+        );
         zoneRepo.save(zone);
 
-        return result;
+        // ---- Convert ENTITY → DTO ----
+        return toDTO(entity);
     }
 
+    // ==========================================
+    // getResultsByZone → RETURNS DTO LIST
+    // ==========================================
     @Override
-    public List<PatternDetectionResult> getResultsByZone(Long zoneId) {
-        return resultRepo.findByZone_Id(zoneId);
+    public List<PatternDetectionResultDTO> getResultsByZone(Long zoneId) {
+
+        return resultRepo.findByZone_Id(zoneId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ===============================
+    // ENTITY → DTO mapper
+    // ===============================
+    private PatternDetectionResultDTO toDTO(PatternDetectionResult e) {
+
+        return new PatternDetectionResultDTO(
+                e.getId(),
+                e.getZone().getId(),
+                e.getCrimeCount(),
+                e.getDetectedPattern(),
+                e.getAnalysisDate()
+        );
     }
 }
