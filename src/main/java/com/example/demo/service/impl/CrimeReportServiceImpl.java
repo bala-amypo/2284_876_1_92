@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service   // ⭐ THIS FIXES THE ERROR
+@Service   // 🔴 THIS WAS MISSING OR WRONG
 public class CrimeReportServiceImpl implements CrimeReportService {
 
     private final CrimeReportRepository reportRepo;
@@ -18,12 +18,15 @@ public class CrimeReportServiceImpl implements CrimeReportService {
 
     @Override
     public CrimeReport addReport(CrimeReport report) {
+
         if (report.getLatitude() == null || report.getLatitude() < -90 || report.getLatitude() > 90) {
             throw new IllegalArgumentException("Invalid latitude");
         }
+
         if (report.getLongitude() == null || report.getLongitude() < -180 || report.getLongitude() > 180) {
             throw new IllegalArgumentException("Invalid longitude");
         }
+
         return reportRepo.save(report);
     }
 
