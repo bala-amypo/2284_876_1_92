@@ -7,7 +7,6 @@ import com.example.demo.repository.HotspotZoneRepository;
 import com.example.demo.service.AnalysisLogService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,8 +31,7 @@ public class AnalysisLogServiceImpl implements AnalysisLogService {
 
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
-        log.setMessage(message);
-        log.setLoggedAt(LocalDateTime.now());
+        log.setMessage(message); // timestamp auto-set in entity
 
         return logRepo.save(log);
     }

@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.dto.PatternDetectionResultDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.PatternDetectionService;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PatternDetectionServiceImpl implements PatternDetectionService {
@@ -29,7 +31,7 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
     }
 
     @Override
-    public PatternDetectionResult detectPattern(Long zoneId) {
+    public PatternDetectionResultDTO detectPattern(Long zoneId) {
 
         HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
@@ -55,24 +57,37 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
         zone.setSeverityLevel(severity);
         zoneRepo.save(zone);
 
-        PatternDetectionResult result = new PatternDetectionResult();
-        result.setZone(zone);
-        result.setCrimeCount(count);
-        result.setDetectedPattern(severity);
-        result.setAnalysisDate(LocalDate.now());
+        PatternDetectionResult entity = new PatternDetectionResult();
+        entity.setZone(zone);
+        entity.setCrimeCount(count);
+        entity.setDetectedPattern(severity);
+        entity.setAnalysisDate(LocalDate.now());
 
-        PatternDetectionResult savedResult = resultRepo.save(result);
+        PatternDetectionResult saved = resultRepo.save(entity);
 
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
         log.setMessage("Pattern detection completed: " + severity);
         logRepo.save(log);
 
-        return savedResult;
+        return toDTO(saved);
     }
 
     @Override
-    public List<PatternDetectionResult> getResultsByZone(Long zoneId) {
-        return resultRepo.findByZone_Id(zoneId);
+    public List<PatternDetectionResultDTO> getResultsByZone(Long zoneId) {
+        return resultRepo.findByZone_Id(zoneId)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    private PatternDetectionResultDTO toDTO(PatternDetectionResult r) {
+        return new PatternDetectionResultDTO(
+                r.getId(),
+                r.getZone().getId(),
+                r.getCrimeCount(),
+                r.getDetectedPattern(),
+                r.getAnalysisDate()
+        );
     }
 }
