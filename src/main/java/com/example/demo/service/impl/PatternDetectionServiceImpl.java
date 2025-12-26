@@ -46,28 +46,28 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
                         zone.getCenterLong() + range
                 );
 
-        int count = crimes.size();
+        int crimeCount = crimes.size();
 
-        String severity;
-        if (count >= 10) severity = "HIGH CRIME";
-        else if (count >= 5) severity = "MEDIUM CRIME";
-        else if (count > 0) severity = "LOW CRIME";
-        else severity = "NO CRIME";
+        String pattern;
+        if (crimeCount >= 10) pattern = "HIGH CRIME";
+        else if (crimeCount >= 5) pattern = "MEDIUM CRIME";
+        else if (crimeCount > 0) pattern = "LOW CRIME";
+        else pattern = "NO CRIME";
 
-        zone.setSeverityLevel(severity);
+        zone.setSeverityLevel(pattern);
         zoneRepo.save(zone);
 
-        PatternDetectionResult entity = new PatternDetectionResult();
-        entity.setZone(zone);
-        entity.setCrimeCount(count);
-        entity.setDetectedPattern(severity);
-        entity.setAnalysisDate(LocalDate.now());
+        PatternDetectionResult result = new PatternDetectionResult();
+        result.setZone(zone);
+        result.setCrimeCount(crimeCount);
+        result.setDetectedPattern(pattern);
+        result.setAnalysisDate(LocalDate.now());
 
-        PatternDetectionResult saved = resultRepo.save(entity);
+        PatternDetectionResult saved = resultRepo.save(result);
 
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
-        log.setMessage("Pattern detection completed: " + severity);
+        log.setMessage("Pattern detection completed: " + pattern);
         logRepo.save(log);
 
         return toDTO(saved);
@@ -81,13 +81,14 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
                 .collect(Collectors.toList());
     }
 
+    // 🔥 FIXED CONSTRUCTOR ORDER
     private PatternDetectionResultDTO toDTO(PatternDetectionResult r) {
         return new PatternDetectionResultDTO(
                 r.getId(),
                 r.getZone().getId(),
-                r.getCrimeCount(),
-                r.getDetectedPattern(),
-                r.getAnalysisDate()
+                r.getAnalysisDate(),     // ✅ LocalDate FIRST
+                r.getCrimeCount(),       // ✅ Integer AFTER
+                r.getDetectedPattern()
         );
     }
 }
