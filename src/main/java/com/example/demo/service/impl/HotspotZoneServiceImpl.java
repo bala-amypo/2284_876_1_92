@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service   // 🔥 THIS WAS MISSING OR WRONG
+@Service
 public class HotspotZoneServiceImpl implements HotspotZoneService {
 
     private final HotspotZoneRepository zoneRepo;
@@ -18,19 +18,15 @@ public class HotspotZoneServiceImpl implements HotspotZoneService {
 
     @Override
     public HotspotZone addZone(HotspotZone zone) {
-
-        if (zone.getCenterLat() == null || zone.getCenterLat() < -90 || zone.getCenterLat() > 90) {
+        if (zone.getCenterLat() == null || zone.getCenterLat() > 90 || zone.getCenterLat() < -90) {
             throw new IllegalArgumentException("Invalid latitude");
         }
-
-        if (zone.getCenterLong() == null || zone.getCenterLong() < -180 || zone.getCenterLong() > 180) {
+        if (zone.getCenterLong() == null || zone.getCenterLong() > 180 || zone.getCenterLong() < -180) {
             throw new IllegalArgumentException("Invalid longitude");
         }
-
         if (zoneRepo.existsByZoneName(zone.getZoneName())) {
             throw new IllegalArgumentException("Zone already exists");
         }
-
         return zoneRepo.save(zone);
     }
 
