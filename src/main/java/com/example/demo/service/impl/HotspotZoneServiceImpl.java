@@ -3,41 +3,39 @@ package com.example.demo.service.impl;
 import com.example.demo.model.HotspotZone;
 import com.example.demo.repository.HotspotZoneRepository;
 import com.example.demo.service.HotspotZoneService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service   // 🔥 THIS WAS MISSING OR WRONG
 public class HotspotZoneServiceImpl implements HotspotZoneService {
 
-    private final HotspotZoneRepository repo;
+    private final HotspotZoneRepository zoneRepo;
 
-    public HotspotZoneServiceImpl(HotspotZoneRepository repo) {
-        this.repo = repo;
+    public HotspotZoneServiceImpl(HotspotZoneRepository zoneRepo) {
+        this.zoneRepo = zoneRepo;
     }
 
     @Override
     public HotspotZone addZone(HotspotZone zone) {
 
-        if (repo.existsByZoneName(zone.getZoneName())) {
-            throw new RuntimeException("Zone already exists");
+        if (zone.getCenterLat() == null || zone.getCenterLat() < -90 || zone.getCenterLat() > 90) {
+            throw new IllegalArgumentException("Invalid latitude");
         }
 
-        if (zone.getCenterLat() < -90 || zone.getCenterLat() > 90) {
-            throw new RuntimeException("Invalid latitude");
+        if (zone.getCenterLong() == null || zone.getCenterLong() < -180 || zone.getCenterLong() > 180) {
+            throw new IllegalArgumentException("Invalid longitude");
         }
 
-        if (zone.getCenterLong() < -180 || zone.getCenterLong() > 180) {
-            throw new RuntimeException("Invalid longitude");
+        if (zoneRepo.existsByZoneName(zone.getZoneName())) {
+            throw new IllegalArgumentException("Zone already exists");
         }
 
-        if (zone.getSeverityLevel() == null) {
-            zone.setSeverityLevel("LOW");
-        }
-
-        return repo.save(zone);
+        return zoneRepo.save(zone);
     }
 
     @Override
     public List<HotspotZone> getAllZones() {
-        return repo.findAll();
+        return zoneRepo.findAll();
     }
 }
