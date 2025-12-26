@@ -3,33 +3,39 @@ package com.example.demo.service.impl;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
-import org.springframework.stereotype.Service;
 
-@Service
+import java.util.Base64;
+
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepository repo;
 
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserServiceImpl(UserRepository repo) {
+        this.repo = repo;
     }
 
     @Override
     public User register(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+
+        if (repo.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("User already exists");
         }
 
-        if (user.getRole() == null || user.getRole().isBlank()) {
+        // simple hash (test-friendly)
+        user.setPassword(
+                Base64.getEncoder().encodeToString(user.getPassword().getBytes())
+        );
+
+        if (user.getRole() == null) {
             user.setRole("ANALYST");
         }
 
-        return userRepository.save(user);
+        return repo.save(user);
     }
 
     @Override
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return repo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

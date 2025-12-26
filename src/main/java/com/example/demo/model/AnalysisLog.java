@@ -1,55 +1,22 @@
 package com.example.demo.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "analysis_logs")
 public class AnalysisLog {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "zone_id")
-    private HotspotZone zone;
-
     private String message;
+    private HotspotZone zone;
+    private LocalDateTime loggedAt = LocalDateTime.now();
 
-    private LocalDateTime loggedAt;
-
-    public AnalysisLog() {}
-
-    public AnalysisLog(HotspotZone zone, String message) {
-        this.zone = zone;
-        this.message = message;
-        this.loggedAt = LocalDateTime.now();
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        if (loggedAt == null) {
-            loggedAt = LocalDateTime.now();
-        }
-    }
-
-    // ✅ GETTERS
     public Long getId() { return id; }
-    public HotspotZone getZone() { return zone; }
+    public void setId(Long id) { this.id = id; }
+
     public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    public HotspotZone getZone() { return zone; }
+    public void setZone(HotspotZone zone) { this.zone = zone; }
+
     public LocalDateTime getLoggedAt() { return loggedAt; }
-
-    // ✅ SETTERS (TESTS REQUIRE THESE)
-    public void setZone(HotspotZone zone) {
-        this.zone = zone;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public void setLoggedAt(LocalDateTime loggedAt) {
-        this.loggedAt = loggedAt;
-    }
 }

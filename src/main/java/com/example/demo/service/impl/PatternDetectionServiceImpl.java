@@ -1,96 +1,76 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.dto.PatternDetectionResultDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.PatternDetectionService;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Service
 public class PatternDetectionServiceImpl implements PatternDetectionService {
 
-    private final HotspotZoneRepository hotspotZoneRepository;
-    private final CrimeReportRepository crimeReportRepository;
-    private final PatternDetectionResultRepository patternDetectionResultRepository;
-    private final AnalysisLogRepository analysisLogRepository;
+    private final HotspotZoneRepository zoneRepo;
+    private final CrimeReportRepository reportRepo;
+    private final PatternDetectionResultRepository resultRepo;
+    private final AnalysisLogRepository logRepo;
 
-    // ✅ MUST MATCH TEST CONSTRUCTOR
     public PatternDetectionServiceImpl(
-            HotspotZoneRepository hotspotZoneRepository,
-            CrimeReportRepository crimeReportRepository,
-            PatternDetectionResultRepository patternDetectionResultRepository,
-            AnalysisLogRepository analysisLogRepository) {
+            HotspotZoneRepository zoneRepo,
+            CrimeReportRepository reportRepo,
+            PatternDetectionResultRepository resultRepo,
+            AnalysisLogRepository logRepo) {
 
-        this.hotspotZoneRepository = hotspotZoneRepository;
-        this.crimeReportRepository = crimeReportRepository;
-        this.patternDetectionResultRepository = patternDetectionResultRepository;
-        this.analysisLogRepository = analysisLogRepository;
+        this.zoneRepo = zoneRepo;
+        this.reportRepo = reportRepo;
+        this.resultRepo = resultRepo;
+        this.logRepo = logRepo;
     }
 
     @Override
-    public PatternDetectionResultDTO detectPattern(Long zoneId) {
+    public PatternDetectionResult detectPattern(Long zoneId) {
 
-        HotspotZone zone = hotspotZoneRepository.findById(zoneId)
+        HotspotZone zone = zoneRepo.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
 
-        double lat = zone.getCenterLat();
-        double lon = zone.getCenterLong();
-
-        List<CrimeReport> crimes =
-                crimeReportRepository.findByLatLongRange(
-                        lat - 0.1, lat + 0.1,
-                        lon - 0.1, lon + 0.1
+        List<CrimeReport> reports =
+                reportRepo.findByLatLongRange(
+                        zone.getCenterLat() - 0.1,
+                        zone.getCenterLat() + 0.1,
+                        zone.getCenterLong() - 0.1,
+                        zone.getCenterLong() + 0.1
                 );
 
-        int crimeCount = crimes.size();
+        int count = reports.size();
+        String pattern;
 
-        String pattern =
-                crimeCount > 10 ? "HIGH_RISK" :
-                crimeCount > 5  ? "MEDIUM_RISK" :
-                                  "LOW_RISK";
+        if (count == 0) pattern = "No Crime";
+        else if (count < 5) pattern = "Low Crime";
+        else if (count < 10) pattern = "Medium Crime";
+        else pattern = "High Crime";
 
-        PatternDetectionResult result =
-                new PatternDetectionResult(
-                        zone,
-                        LocalDate.now(),
-                        crimeCount,
-                        pattern
-                );
+        PatternDetectionResult result = new PatternDetectionResult();
+        result.setZone(zone);
+        result.setCrimeCount(count);
+        result.setDetectedPattern(pattern);
+        result.setAnalysisDate(LocalDate.now());
 
-        result = patternDetectionResultRepository.save(result);
+        resultRepo.save(result);
 
-        // ✅ REQUIRED log save
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
         log.setMessage("Pattern detected: " + pattern);
-        analysisLogRepository.save(log);
+        logRepo.save(log);
 
-        // ✅ CORRECT DTO CONSTRUCTOR ORDER
-        return new PatternDetectionResultDTO(
-                zone.getId(),                 // Long
-                result.getId(),               // Long
-                result.getAnalysisDate(),     // LocalDate
-                result.getCrimeCount(),       // Integer
-                result.getDetectedPattern()   // String
-        );
+        zone.setSeverityLevel(pattern.contains("High") ? "HIGH" :
+                              pattern.contains("Medium") ? "MEDIUM" : "LOW");
+
+        zoneRepo.save(zone);
+
+        return result;
     }
 
     @Override
-    public List<PatternDetectionResultDTO> getResultsByZone(Long zoneId) {
-
-        return patternDetectionResultRepository.findByZone_Id(zoneId)
-                .stream()
-                .map(r -> new PatternDetectionResultDTO(
-                        r.getZone().getId(),
-                        r.getId(),
-                        r.getAnalysisDate(),
-                        r.getCrimeCount(),
-                        r.getDetectedPattern()
-                ))
-                .collect(Collectors.toList());
+    public List<PatternDetectionResult> getResultsByZone(Long zoneId) {
+        return resultRepo.findByZone_Id(zoneId);
     }
 }

@@ -3,40 +3,37 @@ package com.example.demo.service.impl;
 import com.example.demo.model.CrimeReport;
 import com.example.demo.repository.CrimeReportRepository;
 import com.example.demo.service.CrimeReportService;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
 public class CrimeReportServiceImpl implements CrimeReportService {
 
-    private final CrimeReportRepository crimeReportRepository;
+    private final CrimeReportRepository repo;
 
-    public CrimeReportServiceImpl(CrimeReportRepository crimeReportRepository) {
-        this.crimeReportRepository = crimeReportRepository;
+    public CrimeReportServiceImpl(CrimeReportRepository repo) {
+        this.repo = repo;
     }
 
     @Override
     public CrimeReport addReport(CrimeReport report) {
 
-        if (report.getOccurredAt().isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Occurred date cannot be in future");
+        if (report.getLatitude() == null || report.getLatitude() < -90 || report.getLatitude() > 90) {
+            throw new RuntimeException("Invalid latitude");
+        }
+        if (report.getLongitude() == null || report.getLongitude() < -180 || report.getLongitude() > 180) {
+            throw new RuntimeException("Invalid longitude");
         }
 
-        if (report.getLatitude() < -90 || report.getLatitude() > 90) {
-            throw new IllegalArgumentException("Invalid latitude");
+        if (report.getOccurredAt() == null) {
+            report.setOccurredAt(LocalDateTime.now());
         }
 
-        if (report.getLongitude() < -180 || report.getLongitude() > 180) {
-            throw new IllegalArgumentException("Invalid longitude");
-        }
-
-        return crimeReportRepository.save(report);
+        return repo.save(report);
     }
 
     @Override
     public List<CrimeReport> getAllReports() {
-        return crimeReportRepository.findAll();
+        return repo.findAll();
     }
 }
