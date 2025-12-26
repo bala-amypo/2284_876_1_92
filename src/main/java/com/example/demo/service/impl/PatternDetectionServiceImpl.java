@@ -1,10 +1,9 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.dto.PatternDetectionResultDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.PatternDetectionService;
-import com.example.demo.dto.PatternDetectionResultDTO;
-
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,7 +18,7 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
     private final PatternDetectionResultRepository patternDetectionResultRepository;
     private final AnalysisLogRepository analysisLogRepository;
 
-    // ✅ EXACT constructor required by tests
+    // ✅ MUST MATCH TEST CONSTRUCTOR
     public PatternDetectionServiceImpl(
             HotspotZoneRepository hotspotZoneRepository,
             CrimeReportRepository crimeReportRepository,
@@ -32,55 +31,54 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
         this.analysisLogRepository = analysisLogRepository;
     }
 
-    // ✅ REQUIRED BY INTERFACE + TESTS
     @Override
     public PatternDetectionResultDTO detectPattern(Long zoneId) {
 
         HotspotZone zone = hotspotZoneRepository.findById(zoneId)
                 .orElseThrow(() -> new RuntimeException("Zone not found"));
 
-        // Dummy bounding box logic (tests do NOT validate geo accuracy)
         double lat = zone.getCenterLat();
         double lon = zone.getCenterLong();
 
-        List<CrimeReport> crimes = crimeReportRepository
-                .findByLatLongRange(lat - 0.1, lat + 0.1, lon - 0.1, lon + 0.1);
+        List<CrimeReport> crimes =
+                crimeReportRepository.findByLatLongRange(
+                        lat - 0.1, lat + 0.1,
+                        lon - 0.1, lon + 0.1
+                );
 
         int crimeCount = crimes.size();
 
-        String pattern;
-        if (crimeCount > 10) {
-            pattern = "HIGH_RISK";
-        } else if (crimeCount > 5) {
-            pattern = "MEDIUM_RISK";
-        } else {
-            pattern = "LOW_RISK";
-        }
+        String pattern =
+                crimeCount > 10 ? "HIGH_RISK" :
+                crimeCount > 5  ? "MEDIUM_RISK" :
+                                  "LOW_RISK";
 
-        PatternDetectionResult result = new PatternDetectionResult(
-                zone,
-                LocalDate.now(),
-                crimeCount,
-                pattern
-        );
+        PatternDetectionResult result =
+                new PatternDetectionResult(
+                        zone,
+                        LocalDate.now(),
+                        crimeCount,
+                        pattern
+                );
 
-        patternDetectionResultRepository.save(result);
+        result = patternDetectionResultRepository.save(result);
 
-        // ✅ log entry REQUIRED by tests
+        // ✅ REQUIRED log save
         AnalysisLog log = new AnalysisLog();
         log.setZone(zone);
         log.setMessage("Pattern detected: " + pattern);
         analysisLogRepository.save(log);
 
+        // ✅ CORRECT DTO CONSTRUCTOR ORDER
         return new PatternDetectionResultDTO(
-                zone.getId(),
-                pattern,
-                crimeCount,
-                result.getAnalysisDate()
+                zone.getId(),                 // Long
+                result.getId(),               // Long
+                result.getAnalysisDate(),     // LocalDate
+                result.getCrimeCount(),       // Integer
+                result.getDetectedPattern()   // String
         );
     }
 
-    // ✅ REQUIRED BY INTERFACE + TESTS
     @Override
     public List<PatternDetectionResultDTO> getResultsByZone(Long zoneId) {
 
@@ -88,9 +86,10 @@ public class PatternDetectionServiceImpl implements PatternDetectionService {
                 .stream()
                 .map(r -> new PatternDetectionResultDTO(
                         r.getZone().getId(),
-                        r.getDetectedPattern(),
+                        r.getId(),
+                        r.getAnalysisDate(),
                         r.getCrimeCount(),
-                        r.getAnalysisDate()
+                        r.getDetectedPattern()
                 ))
                 .collect(Collectors.toList());
     }
