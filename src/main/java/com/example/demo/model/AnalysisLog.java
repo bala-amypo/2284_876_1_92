@@ -34,19 +34,22 @@ public class AnalysisLog {
         }
     }
 
-    public Long getId() {
-        return id;
+    // ✅ GETTERS
+    public Long getId() { return id; }
+    public HotspotZone getZone() { return zone; }
+    public String getMessage() { return message; }
+    public LocalDateTime getLoggedAt() { return loggedAt; }
+
+    // ✅ SETTERS (TESTS REQUIRE THESE)
+    public void setZone(HotspotZone zone) {
+        this.zone = zone;
     }
 
-    public HotspotZone getZone() {
-        return zone;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public LocalDateTime getLoggedAt() {
-        return loggedAt;
+    public void setLoggedAt(LocalDateTime loggedAt) {
+        this.loggedAt = loggedAt;
     }
 }
