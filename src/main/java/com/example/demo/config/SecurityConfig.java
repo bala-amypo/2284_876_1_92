@@ -1,52 +1,38 @@
- package com.example.demo.config;
+package com.example.demo.config;
 
- import org.springframework.context.annotation.Bean;
- import org.springframework.context.annotation.Configuration;
- import org.springframework.security.config.Customizer;
- import org.springframework.security.config.annotation.web.builders.HttpSecurity;
- import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
- import org.springframework.security.config.http.SessionCreationPolicy;
- import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
- import org.springframework.security.crypto.password.PasswordEncoder;
- import org.springframework.security.web.SecurityFilterChain;
- import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
- import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 
- @Configuration
- @EnableWebSecurity
- public class SecurityConfig {
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
 
-     private final JwtFilter jwtFilter;
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-     public SecurityConfig(JwtFilter jwtFilter) {
-         this.jwtFilter = jwtFilter;
-     }
+        http
+            // Disable CSRF for REST APIs
+            .csrf(csrf -> csrf.disable())
 
-     @Bean
-     public PasswordEncoder passwordEncoder() {
-         return new BCryptPasswordEncoder();
-     }
+            // Allow requests without authentication
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+                .anyRequest().permitAll()
+            )
 
-     @Bean
-     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            // Disable default login & basic auth
+            .httpBasic(Customizer.withDefaults())
+            .formLogin(form -> form.disable());
 
-         http
-             .cors(Customizer.withDefaults())   // ✅ FIX
-             .csrf(AbstractHttpConfigurer::disable) // ✅ FIX
-             .sessionManagement(session ->
-                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-             )
-
-             .authorizeHttpRequests(auth ->
-                 auth.requestMatchers(
-                         "/auth/**",
-                         "/swagger-ui/**",
-                         "/v3/api-docs/**"
-                 ).permitAll()
-                 .anyRequest().authenticated()
-             )
-             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-         return http.build();
-     }
- }
+        return http.build();
+    }
+}
