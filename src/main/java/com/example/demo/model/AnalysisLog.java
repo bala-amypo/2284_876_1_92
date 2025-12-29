@@ -11,19 +11,32 @@ public class AnalysisLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String message;
-
-    private LocalDateTime loggedAt = LocalDateTime.now();
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "zone_id")
     private HotspotZone zone;
 
-    // getters & setters
+    private String message;
+
+    private LocalDateTime loggedAt;
+
+    public AnalysisLog() {
+        this.loggedAt = LocalDateTime.now();
+    }
+
+    public AnalysisLog(HotspotZone zone, String message) {
+        this.zone = zone;
+        this.message = message;
+        this.loggedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-    public LocalDateTime getLoggedAt() { return loggedAt; }
+    public void setId(Long id) { this.id = id; }
+
     public HotspotZone getZone() { return zone; }
     public void setZone(HotspotZone zone) { this.zone = zone; }
+
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    public LocalDateTime getLoggedAt() { return loggedAt; }
 }
